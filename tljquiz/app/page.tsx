@@ -1,16 +1,9 @@
 import Link from "next/link";
 import { getDailyScenario, scenarios } from "@/data/scenarios";
-import { CATEGORY_LABEL, type Category } from "@/lib/types";
+import { CATEGORY_LABEL, LEARNING_ROADMAP } from "@/lib/types";
 import ScenarioCard from "@/components/ScenarioCard";
 
-const CATEGORY_ORDER: Category[] = [
-  "strategist",
-  "technologist",
-  "economist",
-  "execution",
-  "compliance",
-  "leadership",
-];
+const CATEGORY_ORDER = LEARNING_ROADMAP;
 
 export default function Home() {
   const daily = getDailyScenario();

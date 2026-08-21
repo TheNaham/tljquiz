@@ -1,5 +1,7 @@
 import decisionLog from "@/data/decision-log.json";
 import intelLog from "@/data/intel-log.json";
+import { scenarios } from "@/data/scenarios";
+import { CATEGORY_LABEL, LEARNING_ROADMAP } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +94,35 @@ function renderIntelLog(): string {
       } · ${e.label}</strong> — ${e.summary}${src}</li>`;
     })
     .join("")}</ul>`;
+}
+
+function renderLearningRoadmap(): string {
+  const completedTitles = new Set(log.map((d) => d.scenarioTitle));
+  const completedCount = LEARNING_ROADMAP.filter((category) => {
+    const scenario = scenarios.find((s) => s.category === category);
+    return scenario && completedTitles.has(scenario.title);
+  }).length;
+
+  const items = LEARNING_ROADMAP.map((category, i) => {
+    const scenario = scenarios.find((s) => s.category === category);
+    const done = scenario ? completedTitles.has(scenario.title) : false;
+    const num = i + 1;
+    return `<div class="roadmap-step ${done ? "done" : ""}">
+      <div class="roadmap-num">${done ? "✓" : num}</div>
+      <div class="roadmap-body">
+        <div class="roadmap-label">${CATEGORY_LABEL[category]}</div>
+        <div class="roadmap-scenario">${scenario ? scenario.title : "시나리오 준비 중"}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div class="roadmap-progress">
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(
+        (completedCount / LEARNING_ROADMAP.length) * 100
+      )}%"></div></div>
+      <span class="note">${completedCount} / ${LEARNING_ROADMAP.length}개 영역 완료</span>
+    </div>
+    <div class="roadmap-grid">${items}</div>`;
 }
 
 function marketCard(region: string, country: string, tag: string): string {
@@ -369,6 +400,30 @@ function buildHtml(): string {
   .market-card .country { font-family: "Iowan Old Style", Georgia, serif; font-size: 17px; font-weight: 600; margin: 4px 0 8px; }
   .market-card .tag { font-size: 12px; color: var(--ink-soft); }
 
+  .roadmap-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .roadmap-progress .bar-track { flex: 1; margin-top: 0; }
+  .roadmap-progress .note { white-space: nowrap; font-weight: 600; color: var(--ink-soft); }
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .roadmap-step {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .roadmap-step.done { background: var(--good-soft); border-color: color-mix(in srgb, var(--good) 40%, var(--line)); }
+  .roadmap-num {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--card); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--muted);
+  }
+  .roadmap-step.done .roadmap-num { background: var(--good); border-color: var(--good); color: #fff; }
+  .roadmap-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.02em; }
+  .roadmap-scenario { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; line-height: 1.4; }
+
   .backup-links { margin-top: 8px; font-size: 12px; color: var(--muted); }
   .backup-links a { color: var(--muted); text-decoration: underline; }
 
@@ -390,11 +445,13 @@ function buildHtml(): string {
     .main-grid { grid-template-columns: 1fr; }
     .pipeline { grid-template-columns: repeat(3, 1fr); }
     .market-grid { grid-template-columns: repeat(2, 1fr); }
+    .roadmap-grid { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 520px) {
     .kpi-row { grid-template-columns: 1fr; }
     .pipeline { grid-template-columns: repeat(2, 1fr); }
     .market-grid { grid-template-columns: 1fr; }
+    .roadmap-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -545,6 +602,14 @@ function buildHtml(): string {
         .map((n) => `${CIRCLED[n]} <a href="${REF_LINKS[n]}" target="_blank" rel="noopener">${REF_LINKS[n]}</a>`)
         .join("<br/>")}<br/>⑧ 확인 안됨 — 공개 보도 검색 결과 없음
     </div>
+  </div>
+
+  <div class="panel" style="margin-bottom: 32px;">
+    <div class="section-head">
+      <h2>학습 로드맵</h2>
+      <span class="note">글로벌 신사업 핵심 16개 영역 · TLJquiz 시나리오 연계</span>
+    </div>
+    ${renderLearningRoadmap()}
   </div>
 
   <div class="panel" style="margin-bottom: 32px;">
